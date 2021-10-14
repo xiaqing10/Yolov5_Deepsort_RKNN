@@ -1,6 +1,4 @@
 .idea/
-*.rknn
-ckpt.pt
 ./inference
 ./deep_sort_pytorch/deep_sort/deep/data/
 !/deep_sort_pytorch/deep_sort/deep/data/Infrared/test/shenzhen_1123day_morning_sunny_21_101.jpg
