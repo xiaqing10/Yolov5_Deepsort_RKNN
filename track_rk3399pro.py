@@ -69,10 +69,7 @@ class RKNNDetector:
         # img2 = np.random.randint(0,255,[640,640,3]).astype('uint8')
         # self._rknn.eval_perf(inputs=img2, is_print=True)
         t0 = time.time()
-        print("""--------------------""")
-        print("INPUT: ",_img.shape,  np.max(_img), np.min(_img))
         pred_onx = self._rknn.inference(inputs=[_img])
-        print("\ninference time:\t", time.time() - t0)
         boxes, classes, scores = [], [], []
 
         for t in range(3):
@@ -144,7 +141,6 @@ class RKNNDetector:
             if True:
                 plot_one_box((int(x1), int(y1), int(x2), int(y2)), img_src, label=self.names[cl], line_thickness = 1)
 
-        print('Entire Time for detection:\t{}'.format(time.time() - t0))
         return box_list
 
     def predict_resize(self, img_src, conf_thres=0.4, iou_thres=0.45):
@@ -354,32 +350,9 @@ def detect(opt):
 
     # Set Dataloader
     vid_path, vid_writer = None, None
-
-    '''说白了就是读视频'''
-    #加载现有视频用到的是这个
-    dataset = LoadImages(source, img_size=imgsz)
-
-    '''yysy，我觉得你这个开始计时的时间不太对'''
     t0 = time.time()
-
-    save_path = str(Path(out))
-    # extract what is in between the last '/' and last '.'
-    txt_file_name = source.split('/')[-1].split('.')[0]
-    txt_path = str(Path(out)) + '/' + txt_file_name + '.txt'
-
-    # for frame_idx, (path, img, im0s, vid_cap) in enumerate(dataset):
-    #     '''这里开始逐帧处理视频'''
-    #     # img = img.transpose((1,2,0)).astype('float32')
-
-    #     # Detection Inference
-    #     '''推理一张图片，这个用rknn替代'''
-    #     pred = detector.predict(img)
-
     frame_idx  = 0
 
-    # for name in os.listdir(source):
-    #     im_name = os.path.join(source, name)
-    #     img  = cv2.imread(im_name)
     cap = cv2.VideoCapture(source)
 
     while True:
@@ -389,7 +362,6 @@ def detect(opt):
             
         im0 = img.copy()
         pred = detector.predict(img)
-
 
         # Process detections
         '''后处理'''
@@ -404,15 +376,7 @@ def detect(opt):
             det[:, :4] = scale_coords(
                 img.shape[0:2], det[:, :4], im0.shape, Is_rknn=True).round()  # changed in this fun
 
-            # 测试一下
-            # for item in det:
-            #     plot_one_box(item[:4], im0)  # Test for edits
-
-            # Print results
-            # 由Torch换成Numpy
-            print("result detect: ", det)
             for c in np.unique(det[:, -1]):
-                print(names, c)
                 n = (det[:, -1] == c).sum()  # detections per class
                 #s += '%g %ss, ' % (n, names[int(c)])  # add to string
 
@@ -426,7 +390,6 @@ def detect(opt):
 
             # draw boxes for visualization
 
-            print("check results: ", len(outputs))
             '''画框，可用可不用'''
             if len(outputs) > 0:
                 for j, (output, conf) in enumerate(zip(outputs, confs)):
@@ -442,21 +405,17 @@ def detect(opt):
         else:
             deepsort.increment_ages()
 
-        # Print time (inference + NMS)
-        print("wire imgs..................")
         t2 = time_synchronized()
         cv2.imwrite('./inference/output/{}.jpg'.format(str(frame_idx)), im0)
     
         frame_idx += 1
 
-
+        # save video
         if frame_idx ==1:
             fps = cap.get(cv2.CAP_PROP_FPS)
             w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
             h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
             vid_writer = cv2.VideoWriter("aaa.avi", cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
-        
         vid_writer.write(im0)
 
 
